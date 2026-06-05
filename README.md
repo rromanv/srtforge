@@ -33,8 +33,12 @@ can use the cached models.
 From GitHub:
 
 ```bash
-pipx install git+https://github.com/rromanv/srtforge.git
+pipx install --python python3.11 git+https://github.com/rromanv/srtforge.git
 ```
+
+`srtforge` currently supports Python 3.10-3.12. If your default Python is newer
+than that, such as Python 3.14, pass a supported interpreter explicitly with
+`--python`.
 
 Or into a virtual environment:
 
@@ -57,8 +61,23 @@ pip install -e .
 After a PyPI release:
 
 ```bash
-pipx install srtforge
+pipx install --python python3.11 srtforge
 ```
+
+## Troubleshooting
+
+### pipx uses Python 3.13 or newer
+
+If installation fails because your default Python is outside the supported
+range, install a supported Python and tell `pipx` to use it:
+
+```bash
+python3.11 --version
+pipx install --python python3.11 git+https://github.com/rromanv/srtforge.git
+```
+
+If `python3.11` is not installed, install Python 3.11 or 3.12 first, then rerun
+the `pipx install --python ...` command.
 
 ## Usage
 
