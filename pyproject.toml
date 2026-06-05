@@ -1,0 +1,43 @@
+[project]
+name = "srtforge"
+version = "0.1.0"
+description = "Generate, translate, and burn SRT subtitles locally with MLX Whisper."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = "MIT"
+authors = [
+    { name = "rromanv" },
+]
+keywords = ["subtitles", "srt", "whisper", "mlx", "transcription", "translation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Text Processing",
+]
+dependencies = [
+    "mlx-whisper>=0.4",
+    "mlx-lm>=0.20",
+    "mlx-vlm>=0.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/rromanv/srtforge"
+Repository = "https://github.com/rromanv/srtforge"
+Issues = "https://github.com/rromanv/srtforge/issues"
+
+[project.scripts]
+srtforge = "srtforge.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

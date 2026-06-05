@@ -1,0 +1,21 @@
+.DS_Store
+
+# Python caches and build output
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+
+# Local tool/editor state
+.cortex/
+.idea/
+.vscode/
+
+# Generated media/subtitle outputs
+*.srt
+*.subbed.*
