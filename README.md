@@ -28,6 +28,18 @@ The default translation model is `mlx-community/gemma-4-26b-a4b-it-4bit`.
 First use downloads models from Hugging Face into the local cache. Later runs
 can use the cached models.
 
+By default, Hugging Face model files are stored outside this project in your
+user cache, normally under:
+
+```text
+~/.cache/huggingface/hub
+```
+
+You can move that cache by setting Hugging Face cache environment variables such
+as `HF_HOME` or `HUGGINGFACE_HUB_CACHE`. `srtforge` does not store downloaded
+models in the repository or next to your videos. Temporary extracted WAV files
+are created in the system temp directory and deleted after each run.
+
 ## Install
 
 From GitHub:
@@ -204,8 +216,26 @@ python -m twine upload dist/*
 ```
 
 The repository also includes a GitHub Actions workflow for publishing to PyPI
-when a release is created. Configure PyPI Trusted Publishing for
-`rromanv/srtforge` before relying on that workflow.
+when a release is created. It uses PyPI Trusted Publishing, so no PyPI API token
+is needed in GitHub.
+
+Before creating a release that should publish to PyPI, configure a pending
+publisher in your PyPI account:
+
+```text
+PyPI project name: srtforge
+Owner: rromanv
+Repository name: srtforge
+Workflow filename: publish.yml
+Environment name: pypi
+```
+
+PyPI docs:
+
+- Creating a new project with a pending publisher:
+  https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/
+- Publishing with a trusted publisher:
+  https://docs.pypi.org/trusted-publishers/using-a-publisher/
 
 ## License
 
