@@ -13,6 +13,7 @@ from .merge import burn_subtitles
 from .segment import Opts, fit_cues, resegment
 from .srt import segments_to_srt
 from .transcribe import DEFAULT_MODEL, transcribe
+from .transcript import correct_segments, initial_prompt_from_transcript, read_transcript
 from .translate import DEFAULT_TRANSLATE_MODEL, TranslationError, translate_segments
 
 
@@ -73,6 +74,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Compute word-level timestamps (slower).",
     )
     p.add_argument(
+        "--transcript", type=Path, default=None, metavar="PATH",
+        help="Path to a .txt or .md file with the correct transcript text. "
+             "Corrects aligned word substitutions (timing still from audio).",
+    )
+    p.add_argument(
+        "--trascript", dest="transcript", type=Path, metavar="PATH",
+        help=argparse.SUPPRESS,
+    )
+    p.add_argument(
         "--no-resegment", dest="resegment", action="store_false",
         help="Disable sentence-aware re-cueing; keep raw Whisper segments.",
     )
@@ -116,6 +126,7 @@ def _gen_main(argv: list[str] | None = None) -> int:
     need_words = args.word_timestamps or args.resegment
     wav_path = None
     try:
+        transcript_text = read_transcript(args.transcript) if args.transcript else ""
         _log(f"[1/{total}] Extracting audio from {args.video} ...")
         wav_path = extract_audio(args.video)
 
@@ -125,7 +136,11 @@ def _gen_main(argv: list[str] | None = None) -> int:
             model=args.model,
             language=args.language,
             word_timestamps=need_words,
+            initial_prompt=initial_prompt_from_transcript(transcript_text) or None,
         )
+
+        if transcript_text:
+            segments = correct_segments(segments, transcript_text)
 
         if args.resegment:
             segments = resegment(segments, opts)

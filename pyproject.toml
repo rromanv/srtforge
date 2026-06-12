@@ -1,6 +1,6 @@
 [project]
 name = "srtforge"
-version = "0.1.0"
+version = "0.1.1"
 description = "Generate, translate, and burn SRT subtitles locally with MLX Whisper."
 readme = "README.md"
 requires-python = ">=3.10,<3.13"

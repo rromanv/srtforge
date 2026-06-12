@@ -13,6 +13,7 @@ with a local MLX language model. No cloud APIs or keys are required.
 - Standard SRT output
 - Optional local LLM translation with timestamp preservation
 - Optional hard-subtitle burn-in through ffmpeg/libass
+- Reference transcript support to correct aligned word substitutions while keeping Whisper timing
 - Installable Python CLI: `srtforge`
 
 ## Requirements
@@ -42,22 +43,20 @@ are created in the system temp directory and deleted after each run.
 
 ## Install
 
-From GitHub:
+From PyPI:
 
 ```bash
-pipx install --python python3.11 git+https://github.com/rromanv/srtforge.git
+pipx install --python python3.11 srtforge
 ```
 
 `srtforge` currently supports Python 3.10-3.12. If your default Python is newer
 than that, such as Python 3.14, pass a supported interpreter explicitly with
 `--python`.
 
-Or into a virtual environment:
+From GitHub:
 
 ```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install git+https://github.com/rromanv/srtforge.git
+pipx install --python python3.11 git+https://github.com/rromanv/srtforge.git
 ```
 
 For local development:
@@ -70,10 +69,12 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-After a PyPI release:
+Or into a virtual environment:
 
 ```bash
-pipx install --python python3.11 srtforge
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install srtforge
 ```
 
 ## Troubleshooting
@@ -122,6 +123,18 @@ Disable sentence-aware re-cueing:
 ```bash
 srtforge video.mp4 --no-resegment
 ```
+
+Use a reference transcript to improve accuracy:
+
+```bash
+srtforge video.mp4 --transcript script.txt
+srtforge video.mp4 --transcript notes.md
+```
+
+Timing still comes from the audio. The transcript is used as a short Whisper
+prompt and for conservative post-correction of aligned word substitutions, such
+as spelling/name fixes. It does not add missing words or remove extra words. If
+the transcript barely matches the audio, correction is skipped automatically.
 
 Tune subtitle readability:
 
@@ -184,6 +197,7 @@ src/srtforge/
   transcribe.py  # MLX Whisper transcription
   segment.py     # sentence-aware re-cueing, wrapping, pacing
   translate.py   # context-aware local-LLM translation
+  transcript.py  # reference transcript reading + correction
   merge.py       # burn subtitles into video with ffmpeg/libass
   srt.py         # SRT rendering
   cli.py         # argparse CLI
@@ -192,6 +206,7 @@ tests/
   test_merge.py
   test_segment.py
   test_srt.py
+  test_transcript.py
 ```
 
 ## Development

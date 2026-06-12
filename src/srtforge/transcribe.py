@@ -13,6 +13,7 @@ def transcribe(
     model: str = DEFAULT_MODEL,
     language: str | None = None,
     word_timestamps: bool = False,
+    initial_prompt: str | None = None,
 ) -> list[dict[str, Any]]:
     """Transcribe audio and return Whisper segments.
 
@@ -25,6 +26,7 @@ def transcribe(
         path_or_hf_repo=model,
         language=language,
         word_timestamps=word_timestamps,
+        initial_prompt=initial_prompt,
         verbose=False,
     )
     return result.get("segments", [])
