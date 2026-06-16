@@ -79,10 +79,6 @@ def build_parser() -> argparse.ArgumentParser:
              "Corrects aligned word substitutions (timing still from audio).",
     )
     p.add_argument(
-        "--trascript", dest="transcript", type=Path, metavar="PATH",
-        help=argparse.SUPPRESS,
-    )
-    p.add_argument(
         "--no-resegment", dest="resegment", action="store_false",
         help="Disable sentence-aware re-cueing; keep raw Whisper segments.",
     )
@@ -206,14 +202,6 @@ def build_merge_parser() -> argparse.ArgumentParser:
         "--preset", default="slow",
         help="x264 speed/efficiency preset (default: slow).",
     )
-    p.add_argument(
-        "--font-size", type=_positive_int, default=None, metavar="N",
-        help="Override subtitle font size.",
-    )
-    p.add_argument(
-        "--font-name", default=None, metavar="NAME",
-        help="Override subtitle font name.",
-    )
     return p
 
 
@@ -228,8 +216,6 @@ def _merge_main(argv: list[str]) -> int:
             output,
             crf=args.crf,
             preset=args.preset,
-            font_size=args.font_size,
-            font_name=args.font_name,
         )
         _log(f"Done. Wrote {output}")
         return 0

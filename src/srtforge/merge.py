@@ -72,23 +72,12 @@ def _escape_sub_path(path: Path) -> str:
     return _escape_filter_value(str(path))
 
 
-def _force_style(font_size: int | None, font_name: str | None) -> str:
-    parts: list[str] = []
-    if font_name:
-        parts.append(f"FontName={font_name}")
-    if font_size:
-        parts.append(f"FontSize={font_size}")
-    return ",".join(parts)
-
-
 def burn_subtitles(
     video: Path,
     srt: Path,
     output: Path,
     crf: int = 18,
     preset: str = "slow",
-    font_size: int | None = None,
-    font_name: str | None = None,
 ) -> Path:
     """Render ``srt`` onto ``video`` and write ``output``.
 
@@ -103,9 +92,6 @@ def burn_subtitles(
         raise FileNotFoundError(f"Subtitle file not found: {srt}")
 
     vf = f"subtitles=filename={_escape_sub_path(srt)}"
-    style = _force_style(font_size, font_name)
-    if style:
-        vf += f":force_style={_escape_filter_value(style)}"
 
     cmd = [
         ffmpeg,

@@ -28,10 +28,6 @@ class CliTests(unittest.TestCase):
         args = build_parser().parse_args(["video.mp4", "--transcript", "script.txt"])
         self.assertEqual(args.transcript, Path("script.txt"))
 
-    def test_common_transcript_typo_is_accepted(self):
-        args = build_parser().parse_args(["video.mp4", "--trascript", "script.txt"])
-        self.assertEqual(args.transcript, Path("script.txt"))
-
     def test_transcript_flag_defaults_to_none(self):
         args = build_parser().parse_args(["video.mp4"])
         self.assertIsNone(args.transcript)

@@ -265,43 +265,6 @@ def _apply_pacing(cues: list[dict[str, Any]], opts: Opts) -> list[dict[str, Any]
 
 
 # --------------------------------------------------------------------------- #
-# Fallback for segments without word timestamps
-# --------------------------------------------------------------------------- #
-def _fallback_cue(seg: dict[str, Any], opts: Opts) -> list[dict[str, Any]]:
-    text = (seg.get("text") or "").strip()
-    if not text:
-        return []
-    start, end = float(seg.get("start", 0.0)), float(seg.get("end", 0.0))
-    if _fits(text, opts):
-        return [{"start": start, "end": end, "text": wrap_lines(text, opts.max_cpl, opts.max_lines)}]
-    # Char-split proportionally across the segment duration.
-    words = text.split(" ")
-    out: list[dict[str, Any]] = []
-    chunk: list[str] = []
-    total = len(text)
-    span = max(end - start, 0.001)
-    consumed = 0
-    for w in words:
-        cand = (" ".join(chunk + [w])).strip()
-        if chunk and not _fits(cand, opts):
-            chunk_text = " ".join(chunk)
-            c_start = start + span * (consumed / total)
-            consumed += len(chunk_text) + 1
-            c_end = start + span * (consumed / total)
-            out.append({"start": c_start, "end": c_end,
-                        "text": wrap_lines(chunk_text, opts.max_cpl, opts.max_lines)})
-            chunk = [w]
-        else:
-            chunk.append(w)
-    if chunk:
-        chunk_text = " ".join(chunk)
-        c_start = start + span * (consumed / total)
-        out.append({"start": c_start, "end": end,
-                    "text": wrap_lines(chunk_text, opts.max_cpl, opts.max_lines)})
-    return out
-
-
-# --------------------------------------------------------------------------- #
 # Public API
 # --------------------------------------------------------------------------- #
 def fit_cues(cues: list[dict[str, Any]], opts: Opts | None = None) -> list[dict[str, Any]]:
@@ -354,10 +317,7 @@ def resegment(segments: list[dict[str, Any]], opts: Opts | None = None) -> list[
     opts = opts or Opts()
     has_words = any(seg.get("words") for seg in segments)
     if not has_words:
-        out: list[dict[str, Any]] = []
-        for seg in segments:
-            out.extend(_fallback_cue(seg, opts))
-        return _apply_pacing(out, opts)
+        return segments
 
     words = _flatten_words(segments)
     if not words:

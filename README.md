@@ -24,7 +24,7 @@ with a local MLX language model. No cloud APIs or keys are required.
 - Enough disk/RAM for the models you choose
 
 The default transcription model is `mlx-community/whisper-large-v3-turbo`.
-The default translation model is `mlx-community/gemma-4-26b-a4b-it-4bit`.
+The default translation model is `mlx-community/Qwen3.5-9B-OptiQ-4bit`.
 
 First use downloads models from Hugging Face into the local cache. Later runs
 can use the cached models.
@@ -154,7 +154,7 @@ Burn subtitles into a video:
 
 ```bash
 srtforge merge video.mp4 video.srt -o final.mp4
-srtforge merge video.mp4 video.es.srt --crf 16 --font-size 26
+srtforge merge video.mp4 video.es.srt --crf 16
 ```
 
 Run:

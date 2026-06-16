@@ -93,31 +93,26 @@ def correct_segments(segments: list[dict], reference_text: str) -> list[dict]:
     corrected = list(whisper_tokens)
 
     for tag, i1, i2, j1, j2 in sm.get_opcodes():
-        if tag == "equal":
+        if tag != "replace":  # equal/delete/insert: keep Whisper's tokens
             continue
-        elif tag == "replace":
-            w_slice = whisper_lower[i1:i2]
-            r_slice = ref_lower[j1:j2]
-            if len(w_slice) == 1 and len(r_slice) == 1:
-                if w_slice[0] != r_slice[0]:
-                    corrected[i1] = _transfer_trailing_punct(
-                        whisper_tokens[i1], ref_tokens[j1]
-                    )
-            else:
-                block_sm = difflib.SequenceMatcher(
-                    None, " ".join(w_slice), " ".join(r_slice)
+        w_slice = whisper_lower[i1:i2]
+        r_slice = ref_lower[j1:j2]
+        if len(w_slice) == 1 and len(r_slice) == 1:
+            if w_slice[0] != r_slice[0]:
+                corrected[i1] = _transfer_trailing_punct(
+                    whisper_tokens[i1], ref_tokens[j1]
                 )
-                if block_sm.ratio() >= MIN_BLOCK_SIMILARITY:
-                    for k in range(len(w_slice)):
-                        if k < len(r_slice):
-                            if w_slice[k] != r_slice[k]:
-                                corrected[i1 + k] = _transfer_trailing_punct(
-                                    whisper_tokens[i1 + k], ref_tokens[j1 + k]
-                                )
-        elif tag == "delete":
-            pass
-        elif tag == "insert":
-            pass
+        else:
+            block_sm = difflib.SequenceMatcher(
+                None, " ".join(w_slice), " ".join(r_slice)
+            )
+            if block_sm.ratio() >= MIN_BLOCK_SIMILARITY:
+                for k in range(len(w_slice)):
+                    if k < len(r_slice):
+                        if w_slice[k] != r_slice[k]:
+                            corrected[i1 + k] = _transfer_trailing_punct(
+                                whisper_tokens[i1 + k], ref_tokens[j1 + k]
+                            )
 
     new_segments: list[dict] = []
     for idx, seg in enumerate(segments):

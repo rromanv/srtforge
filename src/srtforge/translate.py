@@ -4,10 +4,7 @@ Translates the full cue sequence as a continuous conversation (windowed for
 long videos) while preserving a strict 1:1 mapping between source and target
 cues, so the original timestamps remain valid.
 
-Two inference backends are supported transparently:
-  * ``mlx_lm``  for text-only models (e.g. Qwen3.5-9B-OptiQ-4bit)
-  * ``mlx_vlm`` for multimodal models (e.g. gemma-4-26b-a4b-it-4bit)
-The loader tries ``mlx_lm`` first and falls back to ``mlx_vlm``.
+Uses ``mlx_lm`` text models.
 """
 
 from __future__ import annotations
@@ -15,7 +12,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-DEFAULT_TRANSLATE_MODEL = "mlx-community/gemma-4-26b-a4b-it-4bit"
+DEFAULT_TRANSLATE_MODEL = "mlx-community/Qwen3.5-9B-OptiQ-4bit"
 
 _TAG_RE = re.compile(r"\[\[(\d+)\]\]\s*(.*)")
 
@@ -24,88 +21,41 @@ class TranslationError(RuntimeError):
     """Raised when translation cannot be completed."""
 
 
-# --------------------------------------------------------------------------- #
-# Backend abstraction
-# --------------------------------------------------------------------------- #
 class _Backend:
-    """Wraps an MLX LLM so we can call .chat(user_text) regardless of library."""
-
     def __init__(self, model_id: str) -> None:
-        self.model_id = model_id
-        self.kind: str
         try:
             from mlx_lm import load as lm_load
-        except ImportError as lm_import_error:
-            lm_load = None
-            lm_error: Exception | None = lm_import_error
-        else:
-            lm_error = None
-
-        if lm_load is not None:
-            try:
-                self.model, self.tok = lm_load(model_id)
-            except Exception as exc:
-                lm_error = exc
-            else:
-                self.kind = "lm"
-                return
-
-        try:
-            from mlx_vlm import load as vlm_load
-            from mlx_vlm.utils import load_config
         except ImportError as exc:
-            raise TranslationError(
-                "No supported MLX translation backend is installed "
-                f"(mlx-lm import/load failed: {lm_error}; "
-                f"mlx-vlm import failed: {exc})."
-            ) from exc
-
+            raise TranslationError("mlx-lm is required for translation.") from exc
         try:
-            self.model, self.proc = vlm_load(model_id)
-            self.config = load_config(model_id)
+            self.model, self.tok = lm_load(model_id)
         except Exception as exc:
-            raise TranslationError(
-                f"Failed to load translation model with mlx-lm or mlx-vlm "
-                f"(mlx-lm: {lm_error}; mlx-vlm: {exc})"
-            ) from exc
-        self.kind = "vlm"
+            raise TranslationError(f"Failed to load translation model: {exc}") from exc
 
     def chat(self, user_text: str, max_tokens: int) -> str:
-        if self.kind == "lm":
-            from mlx_lm import generate
-            from mlx_lm.sample_utils import make_sampler
+        from mlx_lm import generate
+        from mlx_lm.sample_utils import make_sampler
 
-            messages = [{"role": "user", "content": user_text}]
-            try:
-                # Disable "thinking" for reasoning models (e.g. Qwen3) so the
-                # output is the translation only, not a reasoning trace.
-                prompt = self.tok.apply_chat_template(
-                    messages, add_generation_prompt=True, enable_thinking=False
-                )
-            except TypeError:
-                prompt = self.tok.apply_chat_template(
-                    messages, add_generation_prompt=True
-                )
-            raw = generate(
-                self.model,
-                self.tok,
-                prompt,
-                max_tokens=max_tokens,
-                sampler=make_sampler(temp=0.0),
-                verbose=False,
+        messages = [{"role": "user", "content": user_text}]
+        try:
+            # Disable "thinking" for reasoning models (e.g. Qwen3) so the
+            # output is the translation only, not a reasoning trace.
+            prompt = self.tok.apply_chat_template(
+                messages, add_generation_prompt=True, enable_thinking=False
             )
-            return _strip_reasoning(raw)
-
-        from mlx_vlm import generate
-        from mlx_vlm.prompt_utils import apply_chat_template
-
-        prompt = apply_chat_template(
-            self.proc, self.config, user_text, add_generation_prompt=True, num_images=0
+        except TypeError:
+            prompt = self.tok.apply_chat_template(
+                messages, add_generation_prompt=True
+            )
+        raw = generate(
+            self.model,
+            self.tok,
+            prompt,
+            max_tokens=max_tokens,
+            sampler=make_sampler(temp=0.0),
+            verbose=False,
         )
-        result = generate(
-            self.model, self.proc, prompt, max_tokens=max_tokens, verbose=False
-        )
-        return _strip_reasoning(getattr(result, "text", str(result)))
+        return _strip_reasoning(raw)
 
 
 def _strip_reasoning(text: str) -> str:
